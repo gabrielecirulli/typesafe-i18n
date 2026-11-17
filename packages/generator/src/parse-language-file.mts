@@ -1,6 +1,8 @@
+import { execFileSync } from 'child_process'
+import { readFileSync } from 'fs'
+import nodeModule from 'module'
 import { resolve, sep } from 'path'
 import { isTruthy } from 'typesafe-utils'
-import ts from 'typescript'
 import type { OutputFormats } from '../../config/src/types.mjs'
 import type { Locale } from '../../runtime/src/core.mjs'
 import type { BaseTranslation } from '../../runtime/src/index.mjs'
@@ -74,6 +76,36 @@ See the example in the official docs: https://github.com/ivanhofer/typesafe-i18n
 	return ''
 }
 
+/**
+ * TypeScript 7 no longer exports `createProgram`, so the locale file is transpiled with the `tsc` command.
+ * Every TypeScript version ships that command.
+ */
+export const transpileWithTsc = (typescriptPath: string, languageFilePath: string, tempPath: string): void => {
+	const { version } = JSON.parse(readFileSync(resolve(typescriptPath, 'package.json'), 'utf8')) as { version: string }
+	// From version 6 on, `tsc` refuses a file argument next to a `tsconfig.json` without this flag. Version 5 rejects the flag.
+	const ignoreConfig = parseInt(version) >= 6 ? ['--ignoreConfig'] : []
+
+	try {
+		execFileSync(
+			process.execPath,
+			[
+				resolve(typescriptPath, 'bin/tsc'),
+				languageFilePath,
+				'--outDir',
+				tempPath,
+				'--allowJs',
+				'--resolveJsonModule',
+				'--skipLibCheck',
+				'--noLib',
+				...ignoreConfig,
+			],
+			{ stdio: 'ignore' },
+		)
+	} catch {
+		// `tsc` exits with an error code on type errors but still emits the files, like `program.emit()` did
+	}
+}
+
 const transpileTypescriptFiles = async (
 	outputPath: string,
 	outputFormat: OutputFormats,
@@ -82,16 +114,8 @@ const transpileTypescriptFiles = async (
 	tempPath: string,
 	typesFileName: string,
 ): Promise<string> => {
-	const program = ts.createProgram([languageFilePath], {
-		outDir: tempPath,
-		allowJs: true,
-		resolveJsonModule: true,
-		skipLibCheck: true,
-		sourceMap: false,
-		noLib: true,
-	})
-
-	program.emit()
+	const typescriptPath = resolve(nodeModule.createRequire(import.meta.url).resolve('typescript/package.json'), '..')
+	transpileWithTsc(typescriptPath, languageFilePath, tempPath)
 
 	const baseTranslationPath = await detectLocationOfCompiledBaseTranslation(
 		outputPath,

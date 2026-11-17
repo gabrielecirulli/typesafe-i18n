@@ -4,7 +4,7 @@
     "test": "uvu -r @esbuild-kit/cjs-loader -i generated -i example . \"(test|src).*\\.test\\.ts\" && pnpm test:tsc",
     "test:watch": "watchlist src test -- pnpm test",
     "test:update-generated-files": "tsx test/generated/update.ts",
-    "test:tsc": "tsc --noEmit -P tsconfig.json"
+    "test:tsc": "node node_modules/typescript/bin/tsc --noEmit -P tsconfig.json"
   },
   "devDependencies": {
     "@types/esutils": "^2.0.0",
@@ -17,6 +17,8 @@
     "type-fest": "^3.13.1",
     "typesafe-utils": "^1.16.2",
     "typescript": "^5.1.6",
+    "typescript-6": "npm:typescript@6.0.3",
+    "typescript-7": "npm:typescript@7.0.2",
     "uvu": "^0.5.6",
     "watchlist": "^0.3.1"
   },
