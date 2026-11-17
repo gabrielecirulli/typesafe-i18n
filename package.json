@@ -142,8 +142,7 @@
 		"fix-imports": "tsx ./packages/fix-imports.ts",
 		"link-typedefinitions": "tsx ./packages/link-typedefinitions.ts",
 		"-- OTHER -----------------------------------------------": "",
-		"lint-staged": "lint-staged",
-		"prepare": "husky install"
+		"lint-staged": "lint-staged"
 	},
 	"devDependencies": {
 		"@size-limit/preset-small-lib": "^8.2.6",
